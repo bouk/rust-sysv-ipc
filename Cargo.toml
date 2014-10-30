@@ -1,0 +1,5 @@
+[package]
+
+name = "rust-sysv-ipc"
+version = "0.0.1"
+authors = ["Bouke van der Bijl <boukevanderbijl@gmail.com>"]
