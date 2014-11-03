@@ -74,6 +74,7 @@ impl MessageQueue {
         }
     }
 
+    /// Send a message to the queue
     pub fn send(&self, msg_type: int, message: &[u8], flags: SendReceiveFlags) -> Result<(), String> {
         assert!(message.len() <= BUFFER_SIZE);
         let mut buffer = MsgBuf{mtype: msg_type as c_long, mtext: [0, ..BUFFER_SIZE]};
@@ -88,6 +89,7 @@ impl MessageQueue {
         }
     }
 
+    /// Receive a message from the queue
     pub fn receive(&self, msg_type: int, flags: SendReceiveFlags) -> Result<(int, Vec<u8>), String> {
         let mut buffer = MsgBuf{mtype: 0, mtext: [0, ..BUFFER_SIZE]};
 
@@ -102,6 +104,7 @@ impl MessageQueue {
         }
     }
 
+    /// Delete the queue
     pub fn remove(self) -> Result<(), String> {
         match unsafe { msgctl(self.msqid, Remove as c_int, 0 as *mut u8) } {
             -1 => Err(os::last_os_error()),
