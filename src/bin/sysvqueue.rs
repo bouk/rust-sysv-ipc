@@ -1,27 +1,29 @@
 extern crate sysv_ipc;
-use std::os;
-use std::num::from_str_radix;
 use sysv_ipc::queue;
 use std::default::Default;
+use std::env;
 
 fn main() {
-    let args: Vec<String> = os::args();
+    let mut args = env::args();
+    let (args_length, _) = args.size_hint();
 
-    if args.len() < 3 {
-        println!("{}: need at least 2 arguments", args[0])
-        return
+    if args_length < 3 {
+        println!("{}: need at least 2 arguments", args.nth(0).unwrap());
+        return;
     }
 
+    let command = args.nth(1).unwrap();
 
+    let value = args.next().unwrap();
     let queue_id_string = {
-        let slice = args[2].as_slice();
+        let slice = value.as_str();
         if slice.len() >= 3 && (slice.starts_with("0x") || slice.starts_with("0X")) {
-            slice.slice_from(2)
+            &slice[2..]
         } else {
-            slice
+            &slice
         }
     };
-    let queue_id: i32 = from_str_radix(queue_id_string, 16).expect("Bad hex value!");
+    let queue_id: i32 = i32::from_str_radix(queue_id_string, 16).expect("Bad hex value!");
 
     if queue_id < 0 {
         panic!("Queue ID needs to be more than 0");
@@ -31,19 +33,18 @@ fn main() {
         Ok(queue) => queue,
         Err(msg) => panic!(msg)
     };
-
-    match args[1].as_slice() {
+    match command.as_str() {
         "send" => {
-            if args.len() != 4 {
+            if args_length != 4 {
                 panic!("Need data to send command")
             }
-            match queue.send(1, args[3].as_bytes(), Default::default()) {
+            match queue.send(1, args.next().unwrap().as_bytes(), Default::default()) {
                 Ok(_) => (),
                 Err(msg) => panic!(msg)
             }
         },
         "receive" => {
-            if args.len() != 3 {
+            if args_length != 3 {
                 panic!("Too many arguments")
             }
             let message = String::from_utf8(match queue.receive(0, Default::default()) {
@@ -54,10 +55,6 @@ fn main() {
             println!("{}", message);
         },
         "remove" => {
-            match queue.remove() {
-                Ok(_) => (),
-                Err(msg) => panic!(msg),
-            }
             match queue.remove() {
                 Ok(_) => (),
                 Err(msg) => panic!(msg),
